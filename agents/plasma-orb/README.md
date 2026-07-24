@@ -1,6 +1,6 @@
 # Plasma Orb
 
-![Plasma Orb](preview.png)
+![Plasma Orb](preview.gif)
 
 A **volumetric energy‑tendril plasma** — ray‑marched electric filaments inside a reflective sphere that swirls the background (a port of a public‑domain Star‑Nest‑style Shadertoy). Scene‑read, composited additively.
 

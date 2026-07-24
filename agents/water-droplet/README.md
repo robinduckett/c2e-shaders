@@ -1,6 +1,6 @@
 # Water Droplet
 
-![Water Droplet](preview.png)
+![Water Droplet](preview.gif)
 
 A **water droplet** that sends concentric ripples across the world beneath it, refracting the scene. Scene‑read.
 

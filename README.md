@@ -9,9 +9,9 @@ whole‑frame post‑processes.
 
 | Magnifier | Fireball | Glowing Crystal |
 |:---:|:---:|:---:|
-| ![Magnifier](agents/magnifier/preview.png) | ![Fireball](agents/fireball/preview.png) | ![Glowing Crystal](agents/glowing-crystal/preview.png) |
+| ![Magnifier](agents/magnifier/preview.png) | ![Fireball](agents/fireball/preview.gif) | ![Glowing Crystal](agents/glowing-crystal/preview.gif) |
 | **Plasma Orb** | **Water Droplet** | |
-| ![Plasma Orb](agents/plasma-orb/preview.png) | ![Water Droplet](agents/water-droplet/preview.png) | |
+| ![Plasma Orb](agents/plasma-orb/preview.gif) | ![Water Droplet](agents/water-droplet/preview.gif) | |
 
 ## Agents (pick‑up toys)
 
