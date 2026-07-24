@@ -9,9 +9,9 @@ whole‑frame post‑processes.
 
 | Magnifier | Fireball | Glowing Crystal |
 |:---:|:---:|:---:|
-| ![](https://github.com/user-attachments/assets/39fa97bf-e4f2-4557-bede-1a78fde6db7b) | ![](https://github.com/user-attachments/assets/b242cb8b-9f3c-49e0-892a-70a692ead499) | ![](https://github.com/user-attachments/assets/ddb24b07-bd1f-48b6-aa19-2baef2faa41c) |
+| <video src="https://github.com/user-attachments/assets/39fa97bf-e4f2-4557-bede-1a78fde6db7b" controls="controls" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/b242cb8b-9f3c-49e0-892a-70a692ead499" controls="controls" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/ddb24b07-bd1f-48b6-aa19-2baef2faa41c" controls="controls" style="max-width: 730px;"></video> |
 | **Plasma Orb** | **Water Droplet** | |
-| ![](https://github.com/user-attachments/assets/51abc33a-9a35-40bf-a39d-20b3b8bf2dc4) | ![](https://github.com/user-attachments/assets/f1da03b3-ea49-44c4-89a3-fbaf51cbc4b8) | |
+| <video src="https://github.com/user-attachments/assets/51abc33a-9a35-40bf-a39d-20b3b8bf2dc4" controls="controls" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/f1da03b3-ea49-44c4-89a3-fbaf51cbc4b8" controls="controls" style="max-width: 730px;"></video> | |
 
 ## Agents (pick‑up toys)
 

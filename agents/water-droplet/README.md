@@ -1,6 +1,7 @@
 # Water Droplet
 
-![](https://github.com/user-attachments/assets/f1da03b3-ea49-44c4-89a3-fbaf51cbc4b8)
+<video src="https://github.com/user-attachments/assets/f1da03b3-ea49-44c4-89a3-fbaf51cbc4b8" controls="controls" style="max-width: 730px;">
+</video>
 
 A **water droplet** that sends concentric ripples across the world beneath it, refracting the scene. Scene‑read.
 

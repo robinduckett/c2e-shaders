@@ -1,6 +1,7 @@
 # Glowing Crystal
 
-![](https://github.com/user-attachments/assets/ddb24b07-bd1f-48b6-aa19-2baef2faa41c)
+<video src="https://github.com/user-attachments/assets/ddb24b07-bd1f-48b6-aa19-2baef2faa41c" controls="controls" style="max-width: 730px;">
+</video>
 
 A **refractive glassy gem** that bends the scene behind it and brightens + pulses it with a coloured inner glow. Scene‑read.
 
