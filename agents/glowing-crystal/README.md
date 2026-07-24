@@ -1,6 +1,6 @@
 # Glowing Crystal
 
-![Glowing Crystal](preview.gif)
+<video src="https://github.com/robinduckett/c2e-shaders/raw/main/agents/glowing-crystal/preview.mp4" controls muted loop width="480"></video>
 
 A **refractive glassy gem** that bends the scene behind it and brightens + pulses it with a coloured inner glow. Scene‑read.
 

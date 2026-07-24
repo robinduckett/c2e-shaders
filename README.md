@@ -9,9 +9,9 @@ whole‑frame post‑processes.
 
 | Magnifier | Fireball | Glowing Crystal |
 |:---:|:---:|:---:|
-| ![Magnifier](agents/magnifier/preview.png) | ![Fireball](agents/fireball/preview.gif) | ![Glowing Crystal](agents/glowing-crystal/preview.gif) |
+| <video src="https://github.com/robinduckett/c2e-shaders/raw/main/agents/magnifier/preview.mp4" muted loop controls width="240"></video> | <video src="https://github.com/robinduckett/c2e-shaders/raw/main/agents/fireball/preview.mp4" muted loop controls width="240"></video> | <video src="https://github.com/robinduckett/c2e-shaders/raw/main/agents/glowing-crystal/preview.mp4" muted loop controls width="240"></video> |
 | **Plasma Orb** | **Water Droplet** | |
-| ![Plasma Orb](agents/plasma-orb/preview.gif) | ![Water Droplet](agents/water-droplet/preview.gif) | |
+| <video src="https://github.com/robinduckett/c2e-shaders/raw/main/agents/plasma-orb/preview.mp4" muted loop controls width="240"></video> | <video src="https://github.com/robinduckett/c2e-shaders/raw/main/agents/water-droplet/preview.mp4" muted loop controls width="240"></video> | |
 
 ## Agents (pick‑up toys)
 
