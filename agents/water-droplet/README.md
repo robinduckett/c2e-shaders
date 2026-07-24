@@ -21,7 +21,8 @@ A **water droplet** that sends concentric ripples across the world beneath it, r
 
 Drop `Water Droplet.agent` (spaces removed) into your game's **My Agents** folder and
 inject it, or send `install.cos` to the engine's CAOS port. On injection it is
-**held by the hand** — click to drop it into the world, click again to pick it up.
+dropped into the world at your cursor as an ordinary carryable agent — click it with the
+Hand to pick it up, click again to put it down.
 
 ## Remove
 

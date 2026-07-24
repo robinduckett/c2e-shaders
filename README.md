@@ -16,9 +16,8 @@ Direct3D CE backends.
 
 ## Agents (pick‑up toys)
 
-Every agent is **held by the hand on injection** — it floats on the cursor so it
-lands in your hand. **Click** it to drop it into the world; click again to pick
-it back up. Once dropped it is a normal carryable agent you can drag with the hand.
+Every agent drops into the world at your cursor as an ordinary carryable agent —
+click it with the Hand to pick it up, click again to put it down.
 
 | Agent | Effect |
 |-------|--------|

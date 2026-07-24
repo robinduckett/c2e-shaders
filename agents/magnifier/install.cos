@@ -1,24 +1,27 @@
 * Magnifier — CESHAD shader agent (classifier 2 21 42001).
-* HELD by the hand on injection: it floats on the pointer so it drops into your
-* hand. CLICK it to drop it into the world; click again to pick it back up.
+*
+* Injects into the world AT THE CURSOR as an ordinary carryable + mouseable
+* agent, so the game's own Hand picks it up and drops it: click to pick up,
+* click again to put down. (An earlier version floated the agent on the pointer
+* with FREL to look "held" — but the Hand has no carry state in that case, so it
+* could never be dropped. Use the engine's real carry, not a visual fake.)
+*
+* NB: CAOS comments must be on their OWN line — a trailing "*" comment after a
+* command silently aborts the rest of the script.
 new: simp 2 21 42001 "magnifier" 1 0 8999
-attr 35                 * carryable(1) + mouseable(2) + floatable(32)
-frel pntr               * float attached to the pointer = held by the hand
-flto -128 -128            * centre the sprite on the cursor
+* attr 3 = carryable(1) + mouseable(2): the Hand can pick it up
+attr 3
 bhvr 0
 shdr "magnifier" { 2.0 0.42 0.01 0.004 }
-
-* click (activate 1) toggles held <-> dropped
-scrp 2 21 42001 1
-  doif frel eq pntr
-    frel null
-    attr 3
-  else
-    attr 35
-    frel pntr
-    flto -128 -128
-  endi
-endm
+* place it centred on the cursor
+seta va10 targ
+targ pntr
+setv va00 posl
+setv va01 post
+targ va10
+subv va00 128
+subv va01 128
+mvto va00 va01
 
 * Re-attach the shader after a world load. A shdr attachment is not serialised
 * with the agent, so on reload the agent would show its bare (black) surrogate
