@@ -1,0 +1,60 @@
+#include <metal_stdlib>
+using namespace metal;
+
+struct CeshadUniform {
+    float4 m0; float4 m1[32]; float4 m2[32]; float4 m3; float4 m4; float4 m5; float4 m6[64];
+};
+struct FSIn {
+    float4 colour   [[user(locn0)]];
+    float2 uv       [[user(locn1)]];
+    uint2  tint     [[user(locn2)]];
+    float4 rect     [[user(locn3)]];
+    float2 screenUV [[user(locn4)]];
+    float2 centerUV [[user(locn5)]] [[flat]];
+};
+static inline float P(constant CeshadUniform& u, int i) { return u.m6[i / 4][i % 4]; }
+
+// Refractive glassy crystal: reads the scene behind it (texture(1)), refracts it
+// per hexagonal facet, tints + BRIGHTENS it (a pulsing inner glow), and adds
+// facet highlights + a bright rim. Scene-read so it visibly lightens the world
+// textures behind it.
+fragment float4 main0(FSIn in [[stage_in]],
+                      constant CeshadUniform& u [[buffer(0)]],
+                      texture2d<float> sprite [[texture(0)]],
+                      texture2d<float> scene  [[texture(1)]],
+                      sampler samp [[sampler(0)]])
+{
+    float3 tint  = float3(P(u,0) > 0.0 ? P(u,0) : 0.45,
+                          P(u,1) > 0.0 ? P(u,1) : 0.80,
+                          P(u,2) > 0.0 ? P(u,2) : 1.00);   // param0..2 colour
+    float pulse  = (P(u,3) > 0.0) ? P(u,3) : 2.0;          // param3 pulse rate
+    float t = u.m3.x;
+
+    float2 p = (in.uv - 0.5) * 2.0;                        // [-1,1]
+    float2 ap = abs(p);
+    float  hex = max(ap.x * 0.866 + ap.y * 0.5, ap.y);     // hexagonal distance
+
+    float3 sceneHere = scene.sample(samp, in.screenUV).rgb;
+    float  body = smoothstep(0.94, 0.86, hex);             // crystal shape
+    if (body <= 0.0) return float4(sceneHere, 1.0);
+
+    // Per-facet refraction: 6 wedges, each offsets the scene sample outward.
+    float ang   = atan2(p.y, p.x);
+    float facet = floor((ang + 3.14159265) / (3.14159265 / 3.0));
+    float2 fdir = float2(cos(facet * 1.0472 + 0.5), sin(facet * 1.0472 + 0.5));
+    float  d    = length(p);
+    float3 refr = scene.sample(samp, in.screenUV + fdir * 0.025 * d).rgb;
+
+    // Pulsing inner glow that BRIGHTENS + tints the refracted scene.
+    float glow = 0.55 + 0.45 * sin(t * pulse);             // ~0.1 .. 1.0
+    float3 col = refr * (1.0 + glow * 0.9);                // lighten the scene behind
+    col = mix(col, col * tint + tint * 0.15, 0.55);        // glassy colour cast
+
+    // Facet highlights + bright rim.
+    float facetHi = 0.5 + 0.5 * sin(ang * 6.0 + t * 0.7);
+    col += tint * facetHi * 0.25 * glow;
+    col += tint * smoothstep(0.86, 0.94, hex) * 0.5;       // rim
+
+    float3 rgb = mix(sceneHere, col, body);
+    return float4(rgb, 1.0);
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Magnifier",
+  "desc": "CESHAD magnifier - magnifies and refracts the world through a glass lens.",
+  "sprite": "magnifier",
+  "spriteW": 256, "spriteH": 256,
+  "bleed": [0, 0, 0, 0],
+  "sceneRead": 1
+}

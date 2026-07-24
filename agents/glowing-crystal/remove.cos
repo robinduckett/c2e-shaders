@@ -1,0 +1,4 @@
+* Remove every Glowing Crystal agent (classifier 2 21 42005) from the world.
+enum 2 21 42005
+  kill targ
+next

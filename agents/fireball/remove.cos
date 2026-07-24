@@ -1,0 +1,4 @@
+* Remove every Fireball agent (classifier 2 21 42003) from the world.
+enum 2 21 42003
+  kill targ
+next

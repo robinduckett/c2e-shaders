@@ -1,0 +1,2 @@
+{ "name":"Fireball","desc":"CESHAD fireball — an animated fire orb that glows past its frame.",
+  "sprite":"fireball","spriteW":128,"spriteH":128,"bleed":[64,64,64,64],"sceneRead":1 }

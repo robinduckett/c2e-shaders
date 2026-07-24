@@ -1,0 +1,4 @@
+* Remove every Plasma Orb agent (classifier 2 21 42004) from the world.
+enum 2 21 42004
+  kill targ
+next

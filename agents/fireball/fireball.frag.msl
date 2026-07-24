@@ -1,0 +1,106 @@
+#include <metal_stdlib>
+using namespace metal;
+
+// Procedural flame — a port of the classic public-domain Shadertoy fire
+// (iq-style simplex fbm shaped into a licking plume). Drawn as a SCENE-READ
+// pack: a single flame sits over the scene beneath it (texture(1)) and casts a
+// warm emissive glow that BRIGHTENS the surrounding scene pixels.
+
+struct CeshadUniform {
+    float4 m0; float4 m1[32]; float4 m2[32]; float4 m3; float4 m4; float4 m5; float4 m6[64];
+};
+struct FSIn {
+    float4 colour   [[user(locn0)]];
+    float2 uv       [[user(locn1)]];
+    uint2  tint     [[user(locn2)]];
+    float4 rect     [[user(locn3)]];
+    float2 screenUV [[user(locn4)]];   // fragment's normalized pos in the scene target
+};
+static inline float P(constant CeshadUniform& u, int i) { return u.m6[i / 4][i % 4]; }
+
+// --- iq 2D simplex noise + fbm (smooth, no floor()-quantised blockiness) -----
+static inline float2 hash(float2 p) {
+    p = float2(dot(p, float2(127.1, 311.7)), dot(p, float2(269.5, 183.3)));
+    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+}
+static inline float snoise(float2 p) {
+    const float K1 = 0.366025404;   // (sqrt(3)-1)/2
+    const float K2 = 0.211324865;   // (3-sqrt(3))/6
+    float2 i = floor(p + (p.x + p.y) * K1);
+    float2 a = p - i + (i.x + i.y) * K2;
+    float2 o = (a.x > a.y) ? float2(1.0, 0.0) : float2(0.0, 1.0);
+    float2 b = a - o + K2;
+    float2 c = a - 1.0 + 2.0 * K2;
+    float3 h = max(0.5 - float3(dot(a, a), dot(b, b), dot(c, c)), 0.0);
+    float3 n = h * h * h * h * float3(dot(a, hash(i + 0.0)), dot(b, hash(i + o)), dot(c, hash(i + 1.0)));
+    return dot(n, float3(70.0));
+}
+static inline float fbm(float2 uv) {
+    float f;
+    float2x2 m = float2x2(1.6, 1.2, -1.2, 1.6);   // column-major, matches GLSL mat2(1.6,1.2,-1.2,1.6)
+    f  = 0.5000 * snoise(uv); uv = m * uv;
+    f += 0.2500 * snoise(uv); uv = m * uv;
+    f += 0.1250 * snoise(uv); uv = m * uv;
+    f += 0.0625 * snoise(uv); uv = m * uv;
+    f = 0.5 + 0.5 * f;
+    return f;
+}
+
+fragment float4 main0(FSIn in [[stage_in]],
+                      constant CeshadUniform& u [[buffer(0)]],
+                      texture2d<float> sprite [[texture(0)]],
+                      texture2d<float> scene  [[texture(1)]],
+                      sampler samp [[sampler(0)]])
+{
+    float intensity = (P(u, 0) > 0.0) ? P(u, 0) : 1.5;   // param0: flame brightness
+    float speed     = (P(u, 1) > 0.0) ? P(u, 1) : 1.0;   // param1: rise speed
+    float glowAmt   = (P(u, 3) > 0.0) ? P(u, 3) : 0.9;   // param3: emissive glow onto scene
+
+    float  t  = u.m3.x;
+    // sprite uv is y-down (0 = top edge). The flame math wants y=0 at the BASE
+    // (bottom) rising to y=1 at the tip, so flip vertically.
+    float2 uv = float2(in.uv.x, 1.0 - in.uv.y);          // 0..1 across the sprite; y=0 base, y=1 tip
+
+    // --- single licking flame (base y=0 -> tip y=1) ---------------------------
+    // NB: NO floor()/mod() tiling from the original full-screen version — the
+    // sprite's bleed pushes uv outside [0,1], and tiling there spawns extra
+    // partial flames + a uniform bright block. strength is fixed at 1 so exactly
+    // one flame lives at the sprite centre and the bleed region stays empty.
+    float2 q = uv;
+    q.y *= 2.0;
+    float T3 = 3.0 * t * speed;
+    q.x = (q.x - 0.5) * 2.0;                             // centre; single flame, no tiling
+    q.y -= 0.25;
+    float n  = fbm(q - float2(0.0, T3));
+    float c  = 1.0 - 16.0 * pow(max(0.0, length(q * float2(1.8 + q.y * 1.5, 0.75)) - n * max(0.0, q.y + 0.25)), 1.2);
+    float c1 = clamp(n * c * (1.5 - pow(1.25 * uv.y, 4.0)), 0.0, 1.0);
+    float3 col = float3(1.5 * c1, 1.5 * c1 * c1 * c1, c1 * c1 * c1 * c1 * c1 * c1);
+    float  a   = clamp(c * (1.0 - pow(uv.y, 3.0)), 0.0, 1.0);   // flame coverage / opacity
+
+    // Confine the flame BODY to the sprite proper. Evaluated in the bleed margin
+    // (uv outside [0,1]) the plume math leaves its domain — c goes strongly
+    // negative and c1 = n*c*(negative) flips positive, saturating col to a white
+    // rectangle. Fade coverage to 0 at the sprite edge so only the (decaying) halo
+    // lives in the bleed; the glow still spills, the white block does not.
+    float2 edge     = min(in.uv, float2(1.0) - in.uv);          // uv distance to nearest edge
+    float  edgeMask = smoothstep(0.0, 0.04, min(edge.x, edge.y));
+    a *= edgeMask;
+
+    // --- warm emissive halo: casts light onto the SURROUNDING scene pixels -----
+    // A soft radial field centred on the flame body, spilling well beyond it (into
+    // the bleed margin) and reaching ~0 before the sprite edge, flickered by the
+    // noise. It BRIGHTENS the scene pixels it overlaps (multiplicative) plus a
+    // small additive term so the fire also glows into darkness.
+    float2 g    = float2((uv.x - 0.5) * 1.25, uv.y - 0.35);
+    float  halo = exp(-4.5 * dot(g, g)) * (0.65 + 0.6 * n);
+    halo = max(halo, a);
+
+    col *= intensity;
+    float3 warm      = float3(1.0, 0.55, 0.22);
+    float3 sceneHere = scene.sample(samp, in.screenUV).rgb;
+    float3 lit = sceneHere
+               + sceneHere * (halo * glowAmt * intensity) * warm   // intensify surrounding pixels
+               + warm * (halo * glowAmt * intensity * 0.35);       // additive glow into dark
+    float3 outc = mix(lit, col, a);                                 // flame body over the lit scene
+    return float4(outc, 1.0);
+}

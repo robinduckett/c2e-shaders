@@ -1,0 +1,2 @@
+{ "name":"WaterDroplet","desc":"CESHAD water droplet — ripples the world beneath it.",
+  "sprite":"waterdrop","spriteW":256,"spriteH":256,"bleed":[0,0,0,0],"sceneRead":1 }

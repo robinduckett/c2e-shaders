@@ -1,0 +1,21 @@
+* Magnifier — CESHAD shader agent (classifier 2 21 42001).
+* HELD by the hand on injection: it floats on the pointer so it drops into your
+* hand. CLICK it to drop it into the world; click again to pick it back up.
+new: simp 2 21 42001 "magnifier" 1 0 8999
+attr 35                 * carryable(1) + mouseable(2) + floatable(32)
+frel pntr               * float attached to the pointer = held by the hand
+flto -128 -128            * centre the sprite on the cursor
+bhvr 0
+shdr "magnifier" { 2.0 0.42 0.01 0.004 }
+
+* click (activate 1) toggles held <-> dropped
+scrp 2 21 42001 1
+  doif frel eq pntr
+    frel null
+    attr 3
+  else
+    attr 35
+    frel pntr
+    flto -128 -128
+  endi
+endm

@@ -1,0 +1,4 @@
+* Remove every Water Droplet agent (classifier 2 21 42002) from the world.
+enum 2 21 42002
+  kill targ
+next

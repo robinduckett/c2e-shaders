@@ -1,0 +1,39 @@
+#include <metal_stdlib>
+using namespace metal;
+
+struct CeshadUniform {
+    float4 m0; float4 m1[32]; float4 m2[32]; float4 m3; float4 m4; float4 m5; float4 m6[64];
+};
+struct FSIn {
+    float4 colour   [[user(locn0)]];
+    float2 uv       [[user(locn1)]];
+    uint2  tint     [[user(locn2)]];
+    float4 rect     [[user(locn3)]];
+    float2 screenUV [[user(locn4)]];
+    float2 centerUV [[user(locn5)]] [[flat]];
+};
+static inline float P(constant CeshadUniform& u, int i) { return u.m6[i / 4][i % 4]; }
+
+fragment float4 main0(FSIn in [[stage_in]],
+                      constant CeshadUniform& u [[buffer(0)]],
+                      texture2d<float> sprite [[texture(0)]],
+                      texture2d<float> scene  [[texture(1)]],
+                      sampler samp [[sampler(0)]])
+{
+    float amp   = (P(u,0) > 0.0) ? P(u,0) : 0.02;   // param0: ripple amplitude (uv)
+    float freq  = (P(u,1) > 0.0) ? P(u,1) : 40.0;   // param1: spatial frequency
+    float speed = (P(u,2) > 0.0) ? P(u,2) : 3.0;    // param2: wave speed
+    float t = u.m3.x;
+    float2 p = in.uv - 0.5;
+    float  d = length(p);
+    float  mask = 1.0 - smoothstep(0.44, 0.5, d);           // circular bead
+    float3 sceneHere = scene.sample(samp, in.screenUV).rgb;
+    if (mask <= 0.0) return float4(sceneHere, 1.0);
+    float2 dir = (d > 1e-4) ? p / d : float2(0.0);
+    float wave = sin(d * freq - t * speed) * (1.0 - d * 2.0); // decays to rim
+    float2 off = dir * wave * amp;
+    float3 refr = scene.sample(samp, in.screenUV + off).rgb;
+    float spec = pow(max(0.0, wave), 3.0) * 0.3;             // glint on wave crests
+    float3 rgb = mix(sceneHere, refr + spec, mask);
+    return float4(rgb, 1.0);
+}

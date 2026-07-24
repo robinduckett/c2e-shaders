@@ -1,0 +1,14 @@
+{
+  "name": "GlowingCrystal",
+  "desc": "CESHAD glowing crystal - a refractive glassy gem that brightens + pulses the scene behind it.",
+  "sprite": "crystal",
+  "spriteW": 128,
+  "spriteH": 160,
+  "bleed": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "sceneRead": 1
+}
