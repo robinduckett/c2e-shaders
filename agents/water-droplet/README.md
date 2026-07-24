@@ -1,6 +1,6 @@
 # Water Droplet
 
-<video src="https://github.com/robinduckett/c2e-shaders/raw/main/agents/water-droplet/preview.mp4" controls muted loop width="480"></video>
+![](https://github.com/robinduckett/c2e-shaders/raw/main/agents/water-droplet/preview.mp4)
 
 A **water droplet** that sends concentric ripples across the world beneath it, refracting the scene. Scene‑read.
 
