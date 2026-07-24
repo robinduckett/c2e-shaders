@@ -10,9 +10,9 @@ Direct3D CE backends.
 
 | Magnifier | Fireball | Glowing Crystal |
 |:---:|:---:|:---:|
-| <video src="https://github.com/user-attachments/assets/39fa97bf-e4f2-4557-bede-1a78fde6db7b" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/b242cb8b-9f3c-49e0-892a-70a692ead499" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/ddb24b07-bd1f-48b6-aa19-2baef2faa41c" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> |
+| <video src="https://github.com/user-attachments/assets/884dc107-51e0-4c1a-8afd-bf2466645405" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/2e91fd11-42b4-4cc9-b650-ca499f8065c6" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/85bcb7bb-3c6e-4094-bef8-c824185c5351" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> |
 | **Plasma Orb** | **Water Droplet** | |
-| <video src="https://github.com/user-attachments/assets/51abc33a-9a35-40bf-a39d-20b3b8bf2dc4" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/f1da03b3-ea49-44c4-89a3-fbaf51cbc4b8" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> | |
+| <video src="https://github.com/user-attachments/assets/391fa6af-d934-43ee-9c36-1f98b4edf623" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> | <video src="https://github.com/user-attachments/assets/769372c1-26b8-49ec-9f48-9b81601223af" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;"></video> | |
 
 ## Agents (pick‑up toys)
 

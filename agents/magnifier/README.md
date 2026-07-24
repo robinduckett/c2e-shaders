@@ -1,6 +1,6 @@
 # Magnifier
 
-<video src="https://github.com/user-attachments/assets/39fa97bf-e4f2-4557-bede-1a78fde6db7b" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;">
+<video src="https://github.com/user-attachments/assets/884dc107-51e0-4c1a-8afd-bf2466645405" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;">
 </video>
 
 A glass lens that **magnifies and refracts** the world beneath it, with a chromatic‑dispersion rim. A CESHAD scene‑read shader agent.
