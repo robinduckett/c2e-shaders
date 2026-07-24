@@ -1,9 +1,10 @@
 # c2e-shaders
 
 CESHAD shader packs for the Creatures 3 / Docking Station **Community Edition**
-engine (the SDL3‑GPU / Metal renderer). Each **agent** is a pick‑up‑and‑drop toy
-that applies a live shader to the world beneath it; the **full‑screen** packs are
-whole‑frame post‑processes.
+engine. Each **agent** is a pick‑up‑and‑drop toy that applies a live shader to the
+world beneath it. The packs are **cross‑platform** — each `.ceshad` carries the
+shader as GLSL, SPIR‑V, MSL and HLSL (SM5.1), so it runs on the Metal, Vulkan and
+Direct3D CE backends.
 
 ## Gallery
 
@@ -27,15 +28,6 @@ it back up. Once dropped it is a normal carryable agent you can drag with the ha
 | [Plasma Orb](agents/plasma-orb/) | volumetric electric‑energy tendrils in a reflective sphere |
 | [Water Droplet](agents/water-droplet/) | concentric ripples distorting the world beneath |
 
-## Full‑screen post‑process (source only)
-
-Whole‑frame effects, shipped as **shader source only** (no packaged agent).
-
-| Pack | Effect |
-|------|--------|
-| [Bloom](full-screen/bloom/) | bright‑pass + blur + additive glow |
-| [CRT](full-screen/crt/) | barrel curvature + scanlines + chromatic aberration |
-
 ## Installing an agent
 
 Drop the agent's `.agent` file into your game's **My Agents** folder and inject it
@@ -45,11 +37,13 @@ placeholder sprite; the engine resolves the shader by name from the game Images 
 
 ## What is a `.ceshad`?
 
-A CESHAD pack is a portable shader container: a cross‑compiled fragment shader
-(MSL here, `*.frag.msl`) plus a small META block (`meta.json`) describing bleed
-margins and flags — **scene‑read** (the shader samples the composited frame behind
-it) and **full‑screen** (applied over the whole frame). Each folder holds the
-shader source and meta so you can rebuild or adapt it.
+A CESHAD pack is a portable shader container holding the same fragment shader in
+every backend language — **GLSL**, **SPIR‑V**, **MSL**, and **HLSL SM5.1** — plus a
+small META block describing bleed margins and the **scene‑read** flag (the shader
+samples the composited frame behind it). Each agent folder ships the canonical
+`*.frag.glsl` source and the reference `*.frag.msl`; the packer
+(`tools/make-ceshad.py`) cross‑compiles GLSL → SPIR‑V → MSL/HLSL and packs them
+together, so one `.ceshad` runs on the Metal, Vulkan and Direct3D CE backends.
 
 ## Licence
 
