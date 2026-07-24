@@ -6,7 +6,7 @@ attr 35                 * carryable(1) + mouseable(2) + floatable(32)
 frel pntr               * float attached to the pointer = held by the hand
 flto -80 -80            * centre the sprite on the cursor
 bhvr 0
-shdr "plasma" { 1.0 0.0 }
+shdr "plasma" { 1.0 }
 
 * click (activate 1) toggles held <-> dropped
 scrp 2 21 42004 1
@@ -18,4 +18,11 @@ scrp 2 21 42004 1
     frel pntr
     flto -80 -80
   endi
+endm
+
+* Re-attach the shader after a world load. A shdr attachment is not serialised
+* with the agent, so on reload the agent would show its bare (black) surrogate
+* sprite; the world-loaded (128) event re-applies it with the same parameters.
+scrp 2 21 42004 128
+  shdr "plasma" { 1.0 }
 endm
