@@ -1,6 +1,6 @@
 # Fireball
 
-![](https://github.com/robinduckett/c2e-shaders/raw/main/agents/fireball/preview.mp4)
+![](https://github.com/user-attachments/assets/b242cb8b-9f3c-49e0-892a-70a692ead499)
 
 A procedural **licking flame** (iq simplex‑noise fbm) that casts a warm emissive glow onto the pixels around it. Scene‑read.
 

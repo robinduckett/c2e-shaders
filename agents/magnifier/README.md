@@ -1,6 +1,6 @@
 # Magnifier
 
-![](https://github.com/robinduckett/c2e-shaders/raw/main/agents/magnifier/preview.mp4)
+![](https://github.com/user-attachments/assets/39fa97bf-e4f2-4557-bede-1a78fde6db7b)
 
 A glass lens that **magnifies and refracts** the world beneath it, with a chromatic‑dispersion rim. A CESHAD scene‑read shader agent.
 
