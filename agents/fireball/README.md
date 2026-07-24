@@ -1,6 +1,6 @@
 # Fireball
 
-<video src="https://github.com/user-attachments/assets/b242cb8b-9f3c-49e0-892a-70a692ead499" controls="controls" style="max-width: 730px;">
+<video src="https://github.com/user-attachments/assets/b242cb8b-9f3c-49e0-892a-70a692ead499" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" style="max-width: 730px;">
 </video>
 
 A procedural **licking flame** (iq simplex‑noise fbm) that casts a warm emissive glow onto the pixels around it. Scene‑read.
