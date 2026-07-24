@@ -29,9 +29,7 @@ it back up. Once dropped it is a normal carryable agent you can drag with the ha
 
 ## Full‑screen post‑process (source only)
 
-Whole‑frame effects, shipped as **shader source only** (no packaged agent). A pack
-is full‑screen when its CESHAD META `flags` **bit 1** is set; apply it as a
-post‑process through your engine's rendering settings.
+Whole‑frame effects, shipped as **shader source only** (no packaged agent).
 
 | Pack | Effect |
 |------|--------|
