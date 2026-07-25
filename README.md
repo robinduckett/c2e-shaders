@@ -39,6 +39,20 @@ from the in‑game Agent Injector (or send its `install.cos` to the running engi
 CAOS port). The `.agent` bundles the compiled `.ceshad` shader pack and a
 placeholder sprite; the engine resolves the shader by name from the game Images tree.
 
+## Building from source
+
+Everything needed to turn a fragment shader into a redistributable `.agent`
+lives in [`tools/`](tools/):
+
+```sh
+tools/build-agents.sh                                      # every effect → build/
+tools/build-agents.sh --src agents/magnifier --out build   # just one
+```
+
+See [tools/README.md](tools/README.md) for the effect-directory layout, the
+cross-platform toolchain, and the CAOS gotchas worth knowing before you write
+an install script.
+
 ## What is a `.ceshad`?
 
 A CESHAD pack is a portable shader container holding the same fragment shader in
