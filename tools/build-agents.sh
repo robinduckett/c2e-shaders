@@ -3,7 +3,7 @@
 # build-agents.sh — build CESHAD shader agents from source.
 #
 # For each effect directory found under SRC this produces, in OUT:
-#   <sprite>.s32      surrogate sprite (+ carry frame, + thumbnail frame)
+#   <sprite>.s16      surrogate sprite (+ carry frame, + thumbnail frame)
 #   <sprite>.ceshad   shader pack — GLSL + SPIR-V + MSL + HLSL SM5.1 + META
 #   <Name>.agent      the PRAY agent you drop into My Agents
 #
@@ -84,7 +84,7 @@ for dir in "${dirs[@]}"; do
   thumbargs=(); thumbframe=-1
   if [ -f "$dir/thumb.png" ]; then thumbargs=(--thumb "$dir/thumb.png"); thumbframe=2; fi
   python3 "$here/make-sprite.py" --w "$w" --h "$h" --carry-w "$cw" --carry-h "$ch" \
-    "${thumbargs[@]}" --out "$out/$sprite.s32"
+    "${thumbargs[@]}" --out "$out/$sprite.s16"
 
   # One canonical shade() source per effect: the packer prepends the prelude,
   # compiles with glslc, cross-compiles with spirv-cross to MSL and HLSL SM5.1
@@ -95,6 +95,6 @@ for dir in "${dirs[@]}"; do
   rmargs=(); [ -f "$dir/remove.cos" ] && rmargs=(--remove "$dir/remove.cos")
   python3 "$here/make-agent.py" --name "$name" --desc "$desc" --install "$install" \
     "${rmargs[@]}" --thumb-frame "$thumbframe" \
-    --sprite "$out/$sprite.s32" --ceshad "$out/$sprite.ceshad" --out "$out/$name.agent"
+    --sprite "$out/$sprite.s16" --ceshad "$out/$sprite.ceshad" --out "$out/$name.agent"
   echo "built $out/$name.agent"
 done
