@@ -79,7 +79,14 @@ def main():
         (os.path.basename(a.ceshad), 2, open(a.ceshad, "rb").read()),   # Images
     ]
     with open(a.out, "wb") as f:
-        anim = os.path.basename(a.sprite) if a.thumb_frame >= 0 else None
+        # The gallery NAME, not the filename: C2E galleries are referenced
+        # without their extension (the injector's own fallback is a bare
+        # "question_mark"). Passing "magnifier.s16" here makes `pray agts`
+        # hand the injector a name it cannot resolve, so `new: simp` fails,
+        # the script falls through to question_mark while keeping this
+        # agent's thumbnail frame index, and indexes past that sprite's only
+        # frame — which took the engine down with a SIGSEGV in the CAOS VM.
+        anim = os.path.splitext(os.path.basename(a.sprite))[0] if a.thumb_frame >= 0 else None
         f.write(build_agent(a.name, a.desc, install, deps, remove,
                             anim_file=anim, thumb_frame=max(0, a.thumb_frame)))
     print("wrote %s (%d deps%s)" % (a.out, len(deps), ", +remove script" if remove else ""))
