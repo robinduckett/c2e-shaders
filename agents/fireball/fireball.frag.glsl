@@ -51,11 +51,20 @@ void main() {
     float intensity = (P(0) > 0.0) ? P(0) : 1.5;
     float speed     = (P(1) > 0.0) ? P(1) : 1.0;
     float glowAmt   = (P(3) > 0.0) ? P(3) : 0.9;
+    // param4: flame size in PIXELS. Expressed in pixels rather than sprite-UV so
+    // the same value gives the same on-screen flame whatever frame the agent is
+    // on — an agent that swaps to a smaller carry frame needs no restatement,
+    // which is what lets the swap happen without a visible jump. u.m0.x = 1/texW.
+    // 0 (the default, i.e. param absent) means "fill the frame": scale stays 1.
+    float sizePx = (P(4) > 0.0) ? P(4) : 0.0;
+    float s      = (sizePx > 0.0) ? (sizePx * u.m0.x) : 1.0;
 
     float t = u.m3.x;
     vec2 screenUV = gl_FragCoord.xy * u.m0.xy;          // canonical screen UV
-    vec2 inUv = vUv;
-    vec2 uv = vec2(inUv.x, 1.0 - inUv.y);               // y=0 base, y=1 tip
+    // Remap the sprite uv about the frame CENTRE so a smaller s draws a smaller
+    // flame centred in the quad; s == 1 leaves the uv untouched.
+    vec2 uvS = (vUv - 0.5) / s + 0.5;
+    vec2 uv = vec2(uvS.x, 1.0 - uvS.y);                 // y=0 base, y=1 tip
 
     vec2 q = uv;
     q.y *= 2.0;
@@ -68,7 +77,7 @@ void main() {
     vec3 col = vec3(1.5 * c1, 1.5 * c1 * c1 * c1, c1 * c1 * c1 * c1 * c1 * c1);
     float a  = clamp(c * (1.0 - pow(uv.y, 3.0)), 0.0, 1.0);
 
-    vec2 edge = min(inUv, vec2(1.0) - inUv);
+    vec2 edge = min(uvS, vec2(1.0) - uvS);
     float edgeMask = smoothstep(0.0, 0.04, min(edge.x, edge.y));
     a *= edgeMask;
 

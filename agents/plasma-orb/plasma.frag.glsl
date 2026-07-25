@@ -124,12 +124,19 @@ vec2 iSphere2(vec3 ro, vec3 rd){
 
 void main() {
     vec2 screenUV = gl_FragCoord.xy * u.m0.xy;          // canonical screen UV
-    vec2 inUv = vUv;
 
     float intensity = (P(0) > 0.0) ? P(0) : 1.0;   // param0: brightness
+    // param1: orb diameter in PIXELS. Expressed in pixels rather than sprite-UV
+    // so the same value gives the same on-screen orb whatever frame the agent is
+    // on — an agent that swaps to a smaller frame needs no restatement, which is
+    // what lets the swap happen without a visible jump. u.m0.x = 1/texW.
+    // 0 (default / param absent) means "fill the frame", i.e. s = 1.0.
+    float sizePx = (P(1) > 0.0) ? P(1) : 0.0;
+    float s      = (sizePx > 0.0) ? (sizePx * u.m0.x) : 1.0;
+    vec2  uvS    = (vUv - 0.5) / s + 0.5;          // sprite uv scaled about the frame centre
     float time = u.m3.x * 1.1;
 
-    vec2 p  = inUv - 0.5;            // square sprite (aspect 1:1)
+    vec2 p  = uvS - 0.5;             // square sprite (aspect 1:1)
     vec2 um = vec2(0.0);             // no mouse
 
     vec3 ro = vec3(0.0, 0.0, 5.0);
@@ -170,7 +177,7 @@ void main() {
     // world beneath (texture(1)).
     col -= vec3(0.0125, 0.0, 0.025) * 1.3;
     col = max(col, 0.0);
-    float  rad   = length(inUv - 0.5) * 2.0;
+    float  rad   = length(uvS - 0.5) * 2.0;
     float  mask  = 1.0 - smoothstep(0.72, 1.0, rad);
     vec3 sceneHere = texture(sampler2D(sceneTex, samp), screenUV).rgb;
     vec3 outc = sceneHere + col * intensity * mask;

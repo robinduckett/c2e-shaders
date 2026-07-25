@@ -40,9 +40,17 @@ void main() {
                       P(1) > 0.0 ? P(1) : 0.80,
                       P(2) > 0.0 ? P(2) : 1.00);            // param0..2 colour
     float pulse  = (P(3) > 0.0) ? P(3) : 2.0;              // param3 pulse rate
+    // param4: gem size in PIXELS. Expressed in pixels rather than sprite-UV so
+    // the same value gives the same on-screen gem whatever frame the agent is
+    // on — an agent that swaps to a smaller carry frame needs no restatement,
+    // which is what lets the swap happen without a visible jump. u.m0.x = 1/texW.
+    // 0 (default / param absent) means "fill the sprite frame" exactly as before.
+    float sizePx = (P(4) > 0.0) ? P(4) : 0.0;
+    float s      = (sizePx > 0.0) ? (sizePx * u.m0.x) : 1.0;
     float t = u.m3.x;
 
-    vec2 p = (vUv - 0.5) * 2.0;                            // [-1,1]
+    vec2 uvS = (vUv - 0.5) / s + 0.5;                      // gem uv, scaled about the frame centre
+    vec2 p = (uvS - 0.5) * 2.0;                            // [-1,1]
     vec2 ap = abs(p);
     float  hex = max(ap.x * 0.866 + ap.y * 0.5, ap.y);     // hexagonal distance
 

@@ -128,9 +128,17 @@ fragment float4 main0(FSIn in [[stage_in]],
                       sampler samp [[sampler(0)]])
 {
     float intensity = (P(u, 0) > 0.0) ? P(u, 0) : 1.0;   // param0: brightness
+    // param1: orb diameter in PIXELS. Expressed in pixels rather than sprite-UV
+    // so the same value gives the same on-screen orb whatever frame the agent is
+    // on — an agent that swaps to a smaller frame needs no restatement, which is
+    // what lets the swap happen without a visible jump. u.m0.x = 1/texW.
+    // 0 (default / param absent) means "fill the frame", i.e. s = 1.0.
+    float sizePx = (P(u, 1) > 0.0) ? P(u, 1) : 0.0;
+    float s      = (sizePx > 0.0) ? (sizePx * u.m0[0]) : 1.0;
+    float2 uvS   = (in.uv - 0.5) / s + 0.5;              // sprite uv scaled about the frame centre
     float time = u.m3.x * 1.1;
 
-    float2 p  = in.uv - 0.5;         // square sprite (aspect 1:1)
+    float2 p  = uvS - 0.5;           // square sprite (aspect 1:1)
     float2 um = float2(0.0);         // no mouse
 
     float3 ro = float3(0.0, 0.0, 5.0);
@@ -171,7 +179,7 @@ fragment float4 main0(FSIn in [[stage_in]],
     // world beneath (texture(1)).
     col -= float3(0.0125, 0.0, 0.025) * 1.3;
     col = max(col, 0.0);
-    float  rad   = length(in.uv - 0.5) * 2.0;
+    float  rad   = length(uvS - 0.5) * 2.0;
     float  mask  = 1.0 - smoothstep(0.72, 1.0, rad);
     float3 sceneHere = scene.sample(samp, in.screenUV).rgb;
     float3 outc = sceneHere + col * intensity * mask;

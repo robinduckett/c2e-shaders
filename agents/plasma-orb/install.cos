@@ -1,19 +1,37 @@
 * Plasma Orb — CESHAD shader agent (classifier 2 21 42004).
 *
-* Injects into the world AT THE CURSOR as an ordinary carryable + mouseable
-* agent, so the game's own Hand picks it up and drops it: click to pick up,
-* click again to put down. (An earlier version floated the agent on the pointer
-* with FREL to look "held" — but the Hand has no carry state in that case, so it
-* could never be dropped. Use the engine's real carry, not a visual fake.)
+* PICK IT UP and it shrinks to carry size; DROP it in the world and it grows
+* back. Dropped into the inventory drawer it STAYS small — that is what fits:
+* the vehicle cabin check (AgentManager.cpp) rejects any agent wider or taller
+* than the cabin. Pickup/drop is the trigger rather than a click, because a
+* click on a carryable agent is taken by the Hand as a pick-up, so activate 1
+* never arrives.
+*
+* The shrink is done by the SHADER: the effect's size param is in PIXELS, so it
+* is eased down while the agent stays on the full 160x160 frame and the effect
+* closes smoothly. SHDR params interpolate in the engine (DrawableObject holds a
+* target and the draw bracket eases toward it), so setting a value animates it.
+*
+* Because that size is in pixels rather than sprite-UV, the same value means the
+* same on-screen effect on EITHER frame — so the swap to the 96x96 carry pose
+* needs no shader change at all, and there is no frame of the bare black
+* surrogate showing through.
+*
+* PUHL gives each pose its own carry handle (both at the frame centre) so the
+* hold point does not jump. While carried the CARRIER owns the position, so the
+* script must not mvto — it only re-centres on a drop in the world.
 *
 * NB: CAOS comments must be on their OWN line — a trailing "*" comment after a
 * command silently aborts the rest of the script.
-new: simp 2 21 42004 "plasma" 1 0 8999
-* attr 3 = carryable(1) + mouseable(2): the Hand can pick it up
+new: simp 2 21 42004 "plasma" 2 0 8999
+* attr 3 = carryable(1) + mouseable(2)
 attr 3
 bhvr 0
-shdr "plasma" { 1.0 }
-* place it centred on the cursor
+puhl 0 80 80
+puhl 1 48 48
+shdr "plasma" { 1.0 160 }
+* ov00: 0 = full size, 1 = carry size
+setv ov00 0
 seta va10 targ
 targ pntr
 setv va00 posl
@@ -23,9 +41,35 @@ subv va00 80
 subv va01 80
 mvto va00 va01
 
-* Re-attach the shader after a world load. A shdr attachment is not serialised
-* with the agent, so on reload the agent would show its bare (black) surrogate
-* sprite; the world-loaded (128) event re-applies it with the same parameters.
+scrp 2 21 42004 4
+  doif ov00 eq 0
+    shdr "plasma" { 1.4 96 }
+    wait 14
+    pose 1
+    setv ov00 1
+  endi
+endm
+
+scrp 2 21 42004 5
+  wait 3
+  doif carr eq null
+    doif ov00 eq 1
+      pose 0
+      setv va00 posl
+      setv va01 post
+      subv va00 32
+      subv va01 32
+      mvto va00 va01
+      shdr "plasma" { 1.0 160 }
+      setv ov00 0
+    endi
+  endi
+endm
+
 scrp 2 21 42004 128
-  shdr "plasma" { 1.0 }
+  doif ov00 eq 1
+    shdr "plasma" { 1.4 96 }
+  else
+    shdr "plasma" { 1.0 160 }
+  endi
 endm

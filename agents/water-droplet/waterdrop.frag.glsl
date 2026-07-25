@@ -24,9 +24,16 @@ void main() {
     float amp   = (P(0) > 0.0) ? P(0) : 0.02;   // param0: ripple amplitude (uv)
     float freq  = (P(1) > 0.0) ? P(1) : 40.0;   // param1: spatial frequency
     float speed = (P(2) > 0.0) ? P(2) : 3.0;    // param2: wave speed
+    // param3: droplet size in PIXELS. Expressed in pixels rather than sprite-UV so
+    // the same value gives the same on-screen bead whatever frame the agent is on —
+    // an agent that swaps to a smaller carry frame needs no restatement. 0 (or
+    // absent) keeps the ripple field filling the sprite quad. u.m0.x = 1/texW.
+    float sizePx = (P(3) > 0.0) ? P(3) : 0.0;
+    float s = (sizePx > 0.0) ? (sizePx * u.m0.x) : 1.0;
     float t = u.m3.x;
     vec2 screenUV = gl_FragCoord.xy * u.m0.xy;              // canonical screen UV
-    vec2 p = vUv - 0.5;
+    vec2 uvS = (vUv - 0.5) / s + 0.5;                       // sprite uv remapped about the frame centre
+    vec2 p = uvS - 0.5;
     float  d = length(p);
     float  mask = 1.0 - smoothstep(0.44, 0.5, d);           // circular bead
     vec3 sceneHere = texture(sampler2D(sceneTex, samp), screenUV).rgb;

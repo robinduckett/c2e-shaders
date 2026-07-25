@@ -55,11 +55,21 @@ fragment float4 main0(FSIn in [[stage_in]],
     float intensity = (P(u, 0) > 0.0) ? P(u, 0) : 1.5;   // param0: flame brightness
     float speed     = (P(u, 1) > 0.0) ? P(u, 1) : 1.0;   // param1: rise speed
     float glowAmt   = (P(u, 3) > 0.0) ? P(u, 3) : 0.9;   // param3: emissive glow onto scene
+    // param4: flame size in PIXELS. Expressed in pixels rather than sprite-UV so
+    // the same value gives the same on-screen flame whatever frame the agent is
+    // on — an agent that swaps to a smaller carry frame needs no restatement,
+    // which is what lets the swap happen without a visible jump. u.m0.x = 1/texW.
+    // 0 (the default, i.e. param absent) means "fill the frame": scale stays 1.
+    float sizePx = (P(u, 4) > 0.0) ? P(u, 4) : 0.0;
+    float s      = (sizePx > 0.0) ? (sizePx * u.m0[0]) : 1.0;
 
     float  t  = u.m3.x;
+    // Remap the sprite uv about the frame CENTRE so a smaller s draws a smaller
+    // flame centred in the quad; s == 1 leaves the uv untouched.
+    float2 uvS = (in.uv - 0.5) / s + 0.5;
     // sprite uv is y-down (0 = top edge). The flame math wants y=0 at the BASE
     // (bottom) rising to y=1 at the tip, so flip vertically.
-    float2 uv = float2(in.uv.x, 1.0 - in.uv.y);          // 0..1 across the sprite; y=0 base, y=1 tip
+    float2 uv = float2(uvS.x, 1.0 - uvS.y);              // 0..1 across the flame; y=0 base, y=1 tip
 
     // --- single licking flame (base y=0 -> tip y=1) ---------------------------
     // NB: NO floor()/mod() tiling from the original full-screen version — the
@@ -82,7 +92,7 @@ fragment float4 main0(FSIn in [[stage_in]],
     // negative and c1 = n*c*(negative) flips positive, saturating col to a white
     // rectangle. Fade coverage to 0 at the sprite edge so only the (decaying) halo
     // lives in the bleed; the glow still spills, the white block does not.
-    float2 edge     = min(in.uv, float2(1.0) - in.uv);          // uv distance to nearest edge
+    float2 edge     = min(uvS, float2(1.0) - uvS);              // uv distance to nearest edge
     float  edgeMask = smoothstep(0.0, 0.04, min(edge.x, edge.y));
     a *= edgeMask;
 
