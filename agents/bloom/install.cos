@@ -1,0 +1,10 @@
+* Bloom - a full-screen scene-read post-process (bright-pass + blur + additive glow).
+* Full-screen CESHAD pack: the sprite geometry is ignored; the shader is applied over
+* the whole composited frame reading texture(1) (the scene) at screenUV.
+* The carrier is Floatable (attr 32) so it screen-locks to the camera - it has no world
+* position, is never camera-culled, and the effect covers the whole screen from anywhere.
+new: simp 2 21 42007 "bloom" 1 0 8999
+attr 32
+frel null
+flto 0 0
+shdr "bloom" { 0.7 1.2 2.0 }

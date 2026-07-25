@@ -1,0 +1,10 @@
+* CRT overlay - a full-screen scene-read post-process (barrel + scanlines + aberration).
+* Full-screen CESHAD pack: the sprite geometry is ignored; the shader is applied over
+* the whole composited frame reading texture(1) (the scene) at screenUV.
+* The carrier is Floatable (attr 32) so it screen-locks to the camera - it has no world
+* position, is never camera-culled, and the effect covers the whole screen from anywhere.
+new: simp 2 21 42006 "crt" 1 0 8999
+attr 32
+frel null
+flto 0 0
+shdr "crt" { 0.14 0.32 0.0018 220 }

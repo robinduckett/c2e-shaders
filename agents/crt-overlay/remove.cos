@@ -1,0 +1,4 @@
+* Remove every CRT Overlay agent (classifier 2 21 42006) from the world.
+enum 2 21 42006
+  kill targ
+next

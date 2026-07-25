@@ -1,0 +1,7 @@
+{
+  "name": "CRTOverlay",
+  "desc": "CESHAD CRT overlay - full-view scanline / barrel-curvature / chromatic-aberration post-process.",
+  "sprite": "crt",
+  "spriteW": 16,
+  "spriteH": 16
+}

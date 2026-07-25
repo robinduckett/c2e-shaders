@@ -1,0 +1,7 @@
+{
+  "name": "Bloom",
+  "desc": "CESHAD bloom - full-screen bright-pass + blur + additive glow.",
+  "sprite": "bloom",
+  "spriteW": 16,
+  "spriteH": 16
+}
