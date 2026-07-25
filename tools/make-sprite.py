@@ -1,97 +1,60 @@
 #!/usr/bin/env python3
-"""Write a multi-frame .s16 sprite (classic C2E 16-bit lane, RGB565).
+"""Write a single-image, fully-transparent .s32 sprite (CE 32-bit PNG lane).
 
-.s16 layout (little-endian), per Gallery.cpp:
-  u32 pixelFormat (bit 0 = 565, clear = 555) | u16 count |
-  count x { u32 pixelOffset(abs), u16 w, u16 h } | concatenated u16 pixel data
-
-Pixel value 0 is the C2E colour key (transparent), so the opaque-black surrogate
-uses 0x0001 — the darkest non-transparent 565 value — rather than true black.
-
-The injector preview frame MUST be a 16-bit sprite: the DS agent injector builds
-its preview with `new: simp 3 3 66 pray agts …` and that path does not take an
-.s32 gallery, so an .s32 sprite falls back to `question_mark` and then indexes
-the thumbnail frame past its end.
+.s32 layout (little-endian), per C2eSprite32.cpp:
+  u32 flags (must have bit 2 / 0x4 set) | u16 count |
+  count x { u32 pngOffset(abs), u16 w, u16 h } | concatenated PNG streams
+The PNG's own IHDR is authoritative; the table w/h are ignored by the engine.
 """
 import argparse, struct, sys, zlib
 
-C16_FLAG_565 = 0x1
+def _png_rgba(w: int, h: int, rgba: bytes) -> bytes:
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        c = tag + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c) & 0xffffffff)
+    sig = b"\x89PNG\r\n\x1a\n"
+    ihdr = struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)   # 8-bit depth, colour type 6 = RGBA
+    stride = w * 4
+    raw = bytearray()
+    for y in range(h):
+        raw.append(0)                                     # filter type 0 (None) per scanline
+        raw += rgba[y * stride:(y + 1) * stride]
+    idat = zlib.compress(bytes(raw), 9)
+    return sig + chunk(b"IHDR", ihdr) + chunk(b"IDAT", idat) + chunk(b"IEND", b"")
 
+def _frame_png(w: int, h: int, opaque: bool) -> bytes:
+    if opaque:
+        # Opaque black surrogate: every pixel R=0 G=0 B=0 A=255. Gives the agent
+        # hit-test pixels across its whole frame (so a CESHAD shader agent is
+        # grab/mouse-pickable), and is a visible fallback if the shader ever fails
+        # to load. The attached .ceshad shader draws over the quad, so the black
+        # is not seen while the shader runs.
+        px = bytes([0, 0, 0, 255]) * (w * h)
+    else:
+        px = bytes(w * h * 4)                             # all zero = fully transparent
+    return _png_rgba(w, h, px)
 
-def _rgb565(r: int, g: int, b: int) -> int:
-    v = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
-    return v if v else 0x0001          # never emit the colour key by accident
-
-
-def _frame_pixels(w: int, h: int, opaque: bool) -> bytes:
-    px = 0x0001 if opaque else 0x0000
-    return struct.pack("<%dH" % (w * h), *([px] * (w * h)))
-
-
-def _png_to_565(data: bytes):
-    """Decode an 8-bit RGB/RGBA PNG to (w, h, 565 bytes). Fully transparent
-    pixels become the colour key; everything else is forced non-zero."""
-    if data[:8] != b"\x89PNG\r\n\x1a\n":
-        raise ValueError("not a PNG")
-    pos, idat, w = 8, b"", None
-    while pos < len(data):
-        ln = struct.unpack(">I", data[pos:pos + 4])[0]
-        tag = data[pos + 4:pos + 8]
-        body = data[pos + 8:pos + 8 + ln]
-        if tag == b"IHDR":
-            w, h, depth, colour = struct.unpack(">IIBB", body[:10])
-            if depth != 8 or colour not in (2, 6):
-                raise ValueError("thumb PNG must be 8-bit RGB or RGBA")
-        elif tag == b"IDAT":
-            idat += body
-        elif tag == b"IEND":
-            break
-        pos += 12 + ln
-    if w is None:
-        raise ValueError("PNG has no IHDR")
-
-    nch = 4 if colour == 6 else 3
-    raw = zlib.decompress(idat)
-    stride = w * nch
-    out, prev = bytearray(), bytearray(stride)
-    p = 0
-    for _ in range(h):
-        ft = raw[p]; p += 1
-        line = bytearray(raw[p:p + stride]); p += stride
-        for i in range(stride):                      # undo the PNG line filter
-            a = line[i - nch] if i >= nch else 0
-            bb = prev[i]
-            c = prev[i - nch] if i >= nch else 0
-            if ft == 1:   line[i] = (line[i] + a) & 0xFF
-            elif ft == 2: line[i] = (line[i] + bb) & 0xFF
-            elif ft == 3: line[i] = (line[i] + ((a + bb) >> 1)) & 0xFF
-            elif ft == 4:
-                pa, pb, pc = abs(bb - c), abs(a - c), abs(a + bb - 2 * c)
-                pr = a if (pa <= pb and pa <= pc) else (bb if pb <= pc else c)
-                line[i] = (line[i] + pr) & 0xFF
-        for x in range(w):
-            r, g, b = line[x * nch], line[x * nch + 1], line[x * nch + 2]
-            alpha = line[x * nch + 3] if nch == 4 else 255
-            out += struct.pack("<H", 0 if alpha == 0 else _rgb565(r, g, b))
-        prev = line
-    return w, h, bytes(out)
-
-
-def build_s16(frames) -> bytes:
-    """frames: [(w, h, pixeldata), ...] — one entry per frame. Frames may differ
-    in size: the table carries per-frame w/h, and SimpleAgent::ShowPose feeds the
+def build_s32(sizes, opaque: bool, thumb: bytes = None) -> bytes:
+    """sizes: [(w, h), ...] — one frame per entry. Frames may differ in size:
+    the .s32 table carries per-frame w/h, and SimpleAgent::ShowPose feeds the
     new frame's dimensions into the agent's extent. That is what lets an agent
     toggle between a full-size pose (0) and a small carry pose (1), the latter
     small enough to satisfy the vehicle cabin fit-check. An optional trailing
     frame holds the injector thumbnail."""
-    header = struct.pack("<I", C16_FLAG_565) + struct.pack("<H", len(frames))
-    off = 6 + len(frames) * 8
+    # The thumbnail (when present) is the LAST entry in `sizes` and arrives
+    # already encoded — it is a real picture of the effect, not a surrogate.
+    frames = sizes[:-1] if thumb else sizes
+    pngs = [_frame_png(w, h, opaque) for (w, h) in frames]
+    if thumb:
+        pngs.append(thumb)
+    header = struct.pack("<I", 0x4) + struct.pack("<H", len(sizes))
+    table_size = len(sizes) * 8
+    off = 6 + table_size
     table = b""
-    for (w, h, px) in frames:
+    for (w, h), png in zip(sizes, pngs):
         table += struct.pack("<IHH", off, w, h)
-        off += len(px)
-    return header + table + b"".join(px for (_, _, px) in frames)
-
+        off += len(png)
+    return header + table + b"".join(pngs)
 
 def main():
     ap = argparse.ArgumentParser()
@@ -103,26 +66,23 @@ def main():
                                     "Library thumbnail (Agent Sprite First Image points at it)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--transparent", action="store_true",
-                    help="fully-transparent sprite (default is opaque surrogate)")
+                    help="fully-transparent sprite (default is opaque-black surrogate)")
     a = ap.parse_args()
-    opaque = not a.transparent
-
-    frames = [(a.w, a.h, _frame_pixels(a.w, a.h, opaque))]
+    sizes = [(a.w, a.h)]
     if a.carry_w and a.carry_h:
-        frames.append((a.carry_w, a.carry_h, _frame_pixels(a.carry_w, a.carry_h, opaque)))
+        sizes.append((a.carry_w, a.carry_h))
+    thumb = None
     if a.thumb:
-        try:
-            tw, th, px = _png_to_565(open(a.thumb, "rb").read())
-        except ValueError as e:
-            sys.exit(f"--thumb {a.thumb}: {e}")
-        frames.append((tw, th, px))
-
+        thumb = open(a.thumb, "rb").read()
+        if thumb[:8] != b"\x89PNG\r\n\x1a\n":
+            sys.exit(f"--thumb {a.thumb} is not a PNG")
+        tw, th = struct.unpack(">II", thumb[16:24])   # IHDR width/height
+        sizes.append((tw, th))
     with open(a.out, "wb") as f:
-        f.write(build_s16(frames))
-    kind = "transparent" if a.transparent else "opaque surrogate"
-    dims = " + ".join(f"{w}x{h}" for (w, h, _) in frames)
-    print(f"wrote {a.out} ({dims} {kind} .s16{', +thumbnail' if a.thumb else ''})")
-
+        f.write(build_s32(sizes, opaque=not a.transparent, thumb=thumb))
+    kind = "transparent" if a.transparent else "opaque-black surrogate"
+    dims = " + ".join(f"{w}x{h}" for (w, h) in sizes)
+    print(f"wrote {a.out} ({dims} {kind} .s32{', +thumbnail' if thumb else ''})")
 
 if __name__ == "__main__":
     main()
