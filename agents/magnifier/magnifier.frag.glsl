@@ -26,7 +26,9 @@ void main() {
     vec2 centerUV = vCenterUV;
 
     float zoom       = (P(0) > 0.0) ? P(0) : 2.0;   // param0: magnification (>1 magnifies; sensible 2x default so an empty param vector doesn't collapse to a minified smear)
-    float radius     = (P(1) > 0.0) ? P(1) : 0.42;  // param1: lens radius in uv (0..0.5)
+    // param1: lens radius in PIXELS (see the MSL twin) — u.m0.x = 1/texW.
+    float radiusPx   = (P(1) > 0.0) ? P(1) : 108.0;
+    float radius     = radiusPx * u.m0.x;
     float refractAmt = P(2);                         // param2: rim refraction (uv units)
     float dispersion = P(3);                         // param3: chromatic dispersion
 

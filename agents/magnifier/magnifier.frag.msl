@@ -30,7 +30,12 @@ fragment float4 main0(FSIn in [[stage_in]],
                       sampler samp [[sampler(0)]])
 {
     float zoom       = (P(u, 0) > 0.0) ? P(u, 0) : 2.0;   // param0: magnification (>1 magnifies; sensible 2x default so an empty param vector doesn't collapse to a minified smear)
-    float radius     = (P(u, 1) > 0.0) ? P(u, 1) : 0.42;  // param1: lens radius in uv (0..0.5)
+    // param1: lens radius in PIXELS. Expressed in pixels rather than sprite-UV so
+    // the same value gives the same on-screen lens whatever frame the agent is
+    // on — an agent that swaps to a smaller carry frame needs no restatement,
+    // which is what lets the swap happen without a visible jump. u.m0.x = 1/texW.
+    float radiusPx   = (P(u, 1) > 0.0) ? P(u, 1) : 108.0;
+    float radius     = radiusPx * u.m0[0];
     float refractAmt = P(u, 2);                           // param2: rim refraction (uv units)
     float dispersion = P(u, 3);                           // param3: chromatic dispersion
 

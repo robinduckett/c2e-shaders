@@ -9,12 +9,12 @@ A glass lens that **magnifies and refracts** the world beneath it, with a chroma
 - **Sprite:** 256×256, scene‑read
 - **Shader pack:** `magnifier.ceshad` (source: `magnifier.frag.msl`, meta: `meta.json`)
 
-## Parameters — `shdr "magnifier" { zoom radius refraction dispersion }`
+## Parameters — `shdr "magnifier" { zoom radiusPx refraction dispersion }`
 
 | # | Param | Default | Meaning |
 |---|-------|---------|---------|
 | 0 | zoom | 2.0 | magnification (>1 magnifies) |
-| 1 | radius | 0.42 | lens radius (uv, 0–0.5) |
+| 1 | radius | 108 | lens radius in **pixels** (same on-screen size on either sprite frame) |
 | 2 | refraction | 0.01 | rim refraction (uv) |
 | 3 | dispersion | 0.004 | chromatic dispersion |
 

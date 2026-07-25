@@ -1,18 +1,39 @@
 * Magnifier — CESHAD shader agent (classifier 2 21 42001).
 *
-* Injects into the world AT THE CURSOR as an ordinary carryable + mouseable
-* agent, so the game's own Hand picks it up and drops it: click to pick up,
-* click again to put down. (An earlier version floated the agent on the pointer
-* with FREL to look "held" — but the Hand has no carry state in that case, so it
-* could never be dropped. Use the engine's real carry, not a visual fake.)
+* PICK IT UP and it shrinks to carry size; DROP it in the world and it grows
+* back. Dropped into the inventory drawer it STAYS small — that is what fits:
+* the vehicle cabin check (AgentManager.cpp) rejects any agent wider or taller
+* than the cabin. Pickup/drop is the trigger rather than a click, because a
+* click on a carryable agent is taken by the Hand as a pick-up, so activate 1
+* never arrives.
+*
+* The shrink is done by the SHADER: the lens radius (param 1) is eased down
+* while the agent stays on the full 256x256 frame, so the lens closes smoothly.
+* SHDR params interpolate in the engine (DrawableObject holds a target and the
+* draw bracket eases toward it), so setting a new value animates it.
+*
+* Radius is in PIXELS, not sprite-UV, so the same value means the same
+* on-screen lens on either frame. That is what lets the frame swap happen with
+* NO shader change at all — no detach/re-attach, so no frame of the bare black
+* surrogate showing through.
+*
+* PUHL gives each pose its own carry handle (the point the Hand holds it by),
+* both at the frame's centre, so the hold point does not jump when the frame
+* swaps. While carried the CARRIER owns the position, so the script must not
+* mvto — it only re-centres when the swap happens in the world.
 *
 * NB: CAOS comments must be on their OWN line — a trailing "*" comment after a
 * command silently aborts the rest of the script.
-new: simp 2 21 42001 "magnifier" 1 0 8999
-* attr 3 = carryable(1) + mouseable(2): the Hand can pick it up
+new: simp 2 21 42001 "magnifier" 2 0 8999
+* attr 3 = carryable(1) + mouseable(2)
 attr 3
 bhvr 0
-shdr "magnifier" { 2.0 0.42 0.01 0.004 }
+* carry handle at the centre of each frame
+puhl 0 128 128
+puhl 1 48 48
+shdr "magnifier" { 2.0 108 0.01 0.004 }
+* ov00: 0 = full size, 1 = carry size
+setv ov00 0
 * place it centred on the cursor
 seta va10 targ
 targ pntr
@@ -23,9 +44,40 @@ subv va00 128
 subv va01 128
 mvto va00 va01
 
-* Re-attach the shader after a world load. A shdr attachment is not serialised
-* with the agent, so on reload the agent would show its bare (black) surrogate
-* sprite; the world-loaded (128) event re-applies it with the same parameters.
+* Picked up (script 4): ease the lens closed, then swap frame. No mvto — the
+* carrier positions us, and PUHL keeps the hold point at the frame centre.
+scrp 2 21 42001 4
+  doif ov00 eq 0
+    shdr "magnifier" { 3.0 40 0.012 0.006 }
+    wait 14
+    pose 1
+    setv ov00 1
+  endi
+endm
+
+* Dropped (script 5): in a vehicle (the drawer) it stays small. In the world it
+* grows back — re-centred, since a frame swap is anchored top-left.
+scrp 2 21 42001 5
+  wait 3
+  doif carr eq null
+    doif ov00 eq 1
+      pose 0
+      setv va00 posl
+      setv va01 post
+      subv va00 80
+      subv va01 80
+      mvto va00 va01
+      shdr "magnifier" { 2.0 108 0.01 0.004 }
+      setv ov00 0
+    endi
+  endi
+endm
+
+* Re-attach the shader after a world load (a shdr attachment is not serialised).
 scrp 2 21 42001 128
-  shdr "magnifier" { 2.0 0.42 0.01 0.004 }
+  doif ov00 eq 1
+    shdr "magnifier" { 3.0 40 0.012 0.006 }
+  else
+    shdr "magnifier" { 2.0 108 0.01 0.004 }
+  endi
 endm

@@ -19,6 +19,11 @@ Direct3D CE backends.
 Every agent drops into the world at your cursor as an ordinary carryable agent —
 click it with the Hand to pick it up, click again to put it down.
 
+**Pick one up and it shrinks**; drop it in the world and it grows back. The shrink
+is done by the shader (each effect takes its size in pixels, eased by the engine)
+rather than by swapping sprites, so it closes smoothly. Dropped into the inventory
+drawer it stays small — a vehicle only accepts an agent that fits its cabin.
+
 | Agent | Effect |
 |-------|--------|
 | [Magnifier](agents/magnifier/) | a glass lens that magnifies + refracts the world |
