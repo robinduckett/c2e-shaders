@@ -7,7 +7,7 @@ A glass lens that **magnifies and refracts** the world beneath it, with a chroma
 
 - **Classifier:** `2 21 42001`
 - **Sprite:** 256×256, scene‑read
-- **Shader pack:** `magnifier.ceshad` (source: `magnifier.frag.msl`, meta: `meta.json`)
+- **Shader pack:** `magnifier.ceshad` (source: `magnifier.frag.glsl`; bleed and flags come from its `CESHAD_*` macros)
 
 ## Parameters — `shdr "magnifier" { zoom radiusPx refraction dispersion }`
 

@@ -6,7 +6,7 @@ full‑screen post‑process.
 
 - **Classifier:** `2 21 42006`
 - **Sprite:** 16×16 placeholder, full‑screen (scene‑read)
-- **Shader pack:** `crt.ceshad` (source: `crt.frag.glsl`, meta: `meta.json`)
+- **Shader pack:** `crt.ceshad` (source: `crt.frag.glsl`; bleed and flags come from its `CESHAD_*` macros)
 
 Full‑screen means the sprite geometry is ignored: the shader runs once over the
 composited frame, reading it through `sceneBehind()` at `sceneUV()`. The carrier

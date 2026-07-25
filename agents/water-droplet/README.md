@@ -7,7 +7,7 @@ A **water droplet** that sends concentric ripples across the world beneath it, r
 
 - **Classifier:** `2 21 42002`
 - **Sprite:** 256×256, scene‑read
-- **Shader pack:** `waterdrop.ceshad` (source: `waterdrop.frag.msl`, meta: `meta.json`)
+- **Shader pack:** `waterdrop.ceshad` (source: `waterdrop.frag.glsl`; bleed and flags come from its `CESHAD_*` macros)
 
 ## Parameters — `shdr "waterdrop" { amplitude frequency speed }`
 

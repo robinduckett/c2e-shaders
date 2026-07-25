@@ -7,7 +7,7 @@ A **volumetric energy‑tendril plasma** — ray‑marched electric filaments in
 
 - **Classifier:** `2 21 42004`
 - **Sprite:** 160×160 (+24 bleed), scene‑read
-- **Shader pack:** `plasma.ceshad` (source: `plasma.frag.msl`, meta: `meta.json`)
+- **Shader pack:** `plasma.ceshad` (source: `plasma.frag.glsl`; bleed and flags come from its `CESHAD_*` macros)
 
 ## Parameters — `shdr "plasma" { intensity }`
 

@@ -7,7 +7,7 @@ A procedural **licking flame** (iq simplex‑noise fbm) that casts a warm emissi
 
 - **Classifier:** `2 21 42003`
 - **Sprite:** 128×128 (+64 bleed), scene‑read
-- **Shader pack:** `fireball.ceshad` (source: `fireball.frag.msl`, meta: `meta.json`)
+- **Shader pack:** `fireball.ceshad` (source: `fireball.frag.glsl`; bleed and flags come from its `CESHAD_*` macros)
 
 ## Parameters — `shdr "fireball" { intensity speed - glow }`
 

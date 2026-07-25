@@ -7,7 +7,7 @@ A **refractive glassy gem** that bends the scene behind it and brightens + pulse
 
 - **Classifier:** `2 21 42005`
 - **Sprite:** 128×160 (+24 bleed), scene‑read
-- **Shader pack:** `crystal.ceshad` (source: `crystal.frag.msl`, meta: `meta.json`)
+- **Shader pack:** `crystal.ceshad` (source: `crystal.frag.glsl`; bleed and flags come from its `CESHAD_*` macros)
 
 ## Parameters — `shdr "crystal" { tintR tintG tintB pulse }`
 
