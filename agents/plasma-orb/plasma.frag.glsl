@@ -1,24 +1,13 @@
-#version 450
-// Canonical cross-platform CESHAD fragment (Vulkan GLSL). Cross-compiled to
-// SPIR-V / MSL / HLSL. No custom screenUV/centerUV varyings — the screen UV is
-// derived canonically from the pixel position (gl_FragCoord * m0.xy), so it only
-// needs the host's standard varyings (colour@0, uv@1) + gl_FragCoord.
+// Volumetric "energy tendrils" plasma — ported from the public-domain Shadertoy
+// (Star-Nest-style ray-marched energy inside a reflective sphere). The original
+// iChannel0 texture lookups are replaced with procedural value noise. Scene-read:
+// the emissive plasma is composited additively over the world beneath it, with a
+// radial fade so it reads as a contained orb.
 //
-// Bindings map to: uniform -> buffer(0)/b0, spriteTex -> texture(0)/t0,
-// sceneTex -> texture(1)/t1, samp -> sampler(0)/s0.
-
-layout(set = 0, binding = 0, std140) uniform CeshadUniform {
-    vec4 m0; vec4 m1[32]; vec4 m2[32]; vec4 m3; vec4 m4; vec4 m5; vec4 m6[64];
-} u;
-layout(set = 0, binding = 1) uniform texture2D spriteTex;
-layout(set = 0, binding = 2) uniform texture2D sceneTex;
-layout(set = 0, binding = 3) uniform sampler   samp;
-
-layout(location = 0) in vec4 vColour;
-layout(location = 1) in vec2 vUv;
-layout(location = 0) out vec4 fragColor;
-
-float P(int i) { return u.m6[i / 4][i % 4]; }
+//   param(0) = brightness                             (default 1)
+//   param(1) = orb diameter in sprite-PIXELS, 0 = fill the frame
+#define CESHAD_SCENE
+#define CESHAD_BLEED 24
 
 // Ray/step counts. Lowered from the original (25/19/35) so a per-frame agent
 // shader stays real-time; raise for more tendril density if your GPU allows.
@@ -122,19 +111,23 @@ vec2 iSphere2(vec3 ro, vec3 rd){
     return vec2(-b-sqrt(h), -b+sqrt(h));
 }
 
-void main() {
-    vec2 screenUV = gl_FragCoord.xy * u.m0.xy;          // canonical screen UV
+// `texel` is never read: the orb is procedural and its containment comes from the
+// radial mask on the frame uv, not from the sprite's alpha.
+vec4 shade(vec4 texel, vec2 uv)
+{
+    vec2 screenUV = sceneUV();
 
-    float intensity = (P(0) > 0.0) ? P(0) : 1.0;   // param0: brightness
+    float intensity = (param(0) > 0.0) ? param(0) : 1.0;   // param0: brightness
     // param1: orb diameter in PIXELS. Expressed in pixels rather than sprite-UV
     // so the same value gives the same on-screen orb whatever frame the agent is
     // on — an agent that swaps to a smaller frame needs no restatement, which is
-    // what lets the swap happen without a visible jump. u.m0.x = 1/texW.
+    // what lets the swap happen without a visible jump.
     // 0 (default / param absent) means "fill the frame", i.e. s = 1.0.
-    float sizePx = (P(1) > 0.0) ? P(1) : 0.0;
-    float s      = (sizePx > 0.0) ? (sizePx * u.m0.x) : 1.0;
-    vec2  uvS    = (vUv - 0.5) / s + 0.5;          // sprite uv scaled about the frame centre
-    float time = u.m3.x * 1.1;
+    float sizePx   = (param(1) > 0.0) ? param(1) : 0.0;
+    vec2  perPixel = texelSize() / (v_spriteRect.zw - v_spriteRect.xy);
+    float s        = (sizePx > 0.0) ? (sizePx * perPixel.x) : 1.0;
+    vec2  uvS      = (uv - 0.5) / s + 0.5;         // sprite uv scaled about the frame centre
+    float time = shaderTime() * 1.1;
 
     vec2 p  = uvS - 0.5;             // square sprite (aspect 1:1)
     vec2 um = vec2(0.0);             // no mouse
@@ -174,12 +167,12 @@ void main() {
 
     // Composite the emissive plasma over the scene: subtract the ambient base so
     // empty pixels are transparent, radial-fade at the sprite edge, add over the
-    // world beneath (texture(1)).
+    // world beneath.
     col -= vec3(0.0125, 0.0, 0.025) * 1.3;
     col = max(col, 0.0);
     float  rad   = length(uvS - 0.5) * 2.0;
     float  mask  = 1.0 - smoothstep(0.72, 1.0, rad);
-    vec3 sceneHere = texture(sampler2D(sceneTex, samp), screenUV).rgb;
+    vec3 sceneHere = sceneBehind(screenUV).rgb;
     vec3 outc = sceneHere + col * intensity * mask;
-    fragColor = vec4(outc, 1.0);
+    return vec4(outc, 1.0);
 }

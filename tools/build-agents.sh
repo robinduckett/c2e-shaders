@@ -4,23 +4,24 @@
 #
 # For each effect directory found under SRC this produces, in OUT:
 #   <sprite>.s32      surrogate sprite (+ carry frame, + thumbnail frame)
-#   <sprite>.ceshad   shader pack — MSL, plus GLSL/SPIR-V/HLSL when the
-#                     cross-compile toolchain is installed
+#   <sprite>.ceshad   shader pack — GLSL + SPIR-V + MSL + HLSL SM5.1 + META
 #   <Name>.agent      the PRAY agent you drop into My Agents
 #
 # An effect directory contains:
-#   meta.json          required — name, desc, sprite, spriteW/H, bleed, sceneRead
-#   <sprite>.frag.msl  required — the Metal fragment shader
-#   <sprite>.frag.glsl optional — canonical Vulkan GLSL. When present, and glslc
-#                      + spirv-cross are on PATH, real GLSL/SPV/HL51 sections are
-#                      packed too, so the agent also runs on the Vulkan and
-#                      Direct3D CE backends
-#   install.cos        required — injected when the agent is installed
-#                      (<sprite>.cos is also accepted)
-#   remove.cos         optional — becomes the PRAY "Remove script", which the
-#                      injector runs to uninstall. Without it, removing the agent
-#                      leaves everything it injected alive in the world
-#   thumb.png          optional — injector / Library thumbnail
+#   meta.json           required — name, desc, sprite, spriteW/H
+#   <sprite>.frag.glsl  required — the canonical shade() source. META (bleed,
+#                       scene-read, full-screen) is read from its CESHAD_* macros,
+#                       not from meta.json
+#   install.cos         required — injected when the agent is installed
+#                       (<sprite>.cos is also accepted)
+#   remove.cos          optional — becomes the PRAY "Remove script", which the
+#                       injector runs to uninstall. Without it, removing the agent
+#                       leaves everything it injected alive in the world
+#   thumb.png           optional — injector / Library thumbnail
+#
+# Needs glslc (shaderc), spirv-cross (spirv-cross) and spirv-val (spirv-tools)
+# on PATH. There is no MSL-only fallback: a pack that is not cross-compiled from
+# the one canonical source is a pack whose backends can silently disagree.
 #
 # Usage:
 #   tools/build-agents.sh                            # SRC=agents/  OUT=build/
@@ -65,12 +66,9 @@ for dir in "${dirs[@]}"; do
   sprite=$(meta_get "$meta" sprite "")
   w=$(meta_get "$meta" spriteW 0)
   h=$(meta_get "$meta" spriteH 0)
-  sr=$(meta_get "$meta" sceneRead 0)
-  fs=$(meta_get "$meta" fullScreen 0)
-  bleed=$(python3 -c "import json,sys;print(','.join(map(str,json.load(open(sys.argv[1])).get('bleed',[0,0,0,0]))))" "$meta")
 
-  msl="$dir/$sprite.frag.msl"
-  [ -f "$msl" ] || { echo "$name: missing $(basename "$msl")" >&2; exit 1; }
+  glsl="$dir/$sprite.frag.glsl"
+  [ -f "$glsl" ] || { echo "$name: missing $(basename "$glsl")" >&2; exit 1; }
   install="$dir/install.cos"
   [ -f "$install" ] || install="$dir/$sprite.cos"
   [ -f "$install" ] || { echo "$name: no install.cos" >&2; exit 1; }
@@ -88,22 +86,11 @@ for dir in "${dirs[@]}"; do
   python3 "$here/make-sprite.py" --w "$w" --h "$h" --carry-w "$cw" --carry-h "$ch" \
     "${thumbargs[@]}" --out "$out/$sprite.s32"
 
-  # Cross-platform sections, when the canonical GLSL and the toolchain are both
-  # present: glslc -> SPIR-V, spirv-cross -> HLSL SM5.1. spirv-cross numbers the
-  # resources from its own binding order, so the registers are rewritten to the
-  # fixed CE slots (uniform b0, sprite t0, scene t1, sampler s0).
-  glsl="$dir/$sprite.frag.glsl"
-  ceshadargs=()
-  if [ -f "$glsl" ] && command -v glslc >/dev/null && command -v spirv-cross >/dev/null; then
-    glslc -fshader-stage=frag "$glsl" -o "$out/$sprite.spv"
-    spirv-cross --hlsl --shader-model 51 "$out/$sprite.spv" \
-      | sed -E -e 's#register\(t1, space0\)#register(t0, space0)#' \
-               -e 's#register\(t2, space0\)#register(t1, space0)#' \
-               -e 's#register\(s3, space0\)#register(s0, space0)#' > "$out/$sprite.hlsl"
-    ceshadargs=(--glsl "$glsl" --spv "$out/$sprite.spv" --hl51 "$out/$sprite.hlsl")
-  fi
-  python3 "$here/make-ceshad.py" --msl "$msl" --out "$out/$sprite.ceshad" \
-    --bleed "$bleed" --scene-read "$sr" --full-screen "$fs" "${ceshadargs[@]}"
+  # One canonical shade() source per effect: the packer prepends the prelude,
+  # compiles with glslc, cross-compiles with spirv-cross to MSL and HLSL SM5.1
+  # (normalising the registers to CE's fixed slots), and derives META from the
+  # CESHAD_* macros in the source.
+  python3 "$here/make-ceshad.py" --shade "$glsl" --out "$out/$sprite.ceshad"
 
   rmargs=(); [ -f "$dir/remove.cos" ] && rmargs=(--remove "$dir/remove.cos")
   python3 "$here/make-agent.py" --name "$name" --desc "$desc" --install "$install" \

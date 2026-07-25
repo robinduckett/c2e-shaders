@@ -3,12 +3,5 @@
   "desc": "CESHAD plasma orb \u2014 an electric plasma sphere.",
   "sprite": "plasma",
   "spriteW": 160,
-  "spriteH": 160,
-  "bleed": [
-    24,
-    24,
-    24,
-    24
-  ],
-  "sceneRead": 1
+  "spriteH": 160
 }
