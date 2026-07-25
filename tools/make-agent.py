@@ -33,7 +33,8 @@ def _chunk(type4: bytes, name: str, body: bytes) -> bytes:
     name128 = enc.ljust(128, b"\x00")
     return type4 + name128 + struct.pack("<iii", len(comp), len(body), 1) + comp
 
-def build_agent(name, desc, install_cos, deps, remove_cos=None, anim_file=None, thumb_frame=0):
+def build_agent(name, desc, install_cos, deps, remove_cos=None, anim_file=None,
+                thumb_frame=0, anim_string="0"):
     # deps: list of (filename, category_int, filebytes)
     # "Remove script" is what the injector / asset library runs to UNINSTALL the
     # agent (it kills the injected agents). Without it, removing the agent leaves
@@ -46,7 +47,25 @@ def build_agent(name, desc, install_cos, deps, remove_cos=None, anim_file=None, 
     int_tags = [("Agent Type", 0), ("Script Count", 1), ("Dependency Count", len(deps))]
     str_tags = [("Agent Description", desc), ("Script 1", install_cos)]
     if anim_file:
+        # The injector reads FOUR tags (DS bootstrap, "comms screen.cos",
+        # script 1 2 210 1046):
+        #   pray file … "Agent Animation File"    "question_mark.c16" 2 1
+        #   sets va15   … "Agent Animation String" "0"
+        #   setv va16   … "Agent Sprite First Image" 0
+        #   new: simp 3 3 66 … "Agent Animation Gallery" "question_mark" 0 va16 0
+        #   anms va15
+        # "File" is the FILENAME (it is installed out of the PRAY chunk, so it
+        # must match the chunk name, extension and all). "Gallery" is the
+        # extension-less GALLERY name `new: simp` takes. They are different tags
+        # and both are required: omit Gallery and the preview is built from the
+        # "question_mark" default while still being handed THIS agent's first-
+        # image index, which indexes past that sprite's single frame and takes
+        # the engine down with a SIGSEGV in the CAOS VM.
+        import os as _os
         str_tags.append(("Agent Animation File", anim_file))
+        str_tags.append(("Agent Animation Gallery",
+                         _os.path.splitext(anim_file)[0]))
+        str_tags.append(("Agent Animation String", str(anim_string)))
         int_tags.append(("Agent Sprite First Image", thumb_frame))
     if remove_cos:
         str_tags.append(("Remove script", remove_cos))
@@ -79,14 +98,10 @@ def main():
         (os.path.basename(a.ceshad), 2, open(a.ceshad, "rb").read()),   # Images
     ]
     with open(a.out, "wb") as f:
-        # The gallery NAME, not the filename: C2E galleries are referenced
-        # without their extension (the injector's own fallback is a bare
-        # "question_mark"). Passing "magnifier.s16" here makes `pray agts`
-        # hand the injector a name it cannot resolve, so `new: simp` fails,
-        # the script falls through to question_mark while keeping this
-        # agent's thumbnail frame index, and indexes past that sprite's only
-        # frame — which took the engine down with a SIGSEGV in the CAOS VM.
-        anim = os.path.splitext(os.path.basename(a.sprite))[0] if a.thumb_frame >= 0 else None
+        # The FILENAME — it is installed out of the PRAY chunk by `pray file`,
+        # so it must match the FILE chunk name exactly. build_agent derives the
+        # extension-less "Agent Animation Gallery" from it.
+        anim = os.path.basename(a.sprite) if a.thumb_frame >= 0 else None
         f.write(build_agent(a.name, a.desc, install, deps, remove,
                             anim_file=anim, thumb_frame=max(0, a.thumb_frame)))
     print("wrote %s (%d deps%s)" % (a.out, len(deps), ", +remove script" if remove else ""))
